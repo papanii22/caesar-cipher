@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caesar Cipher</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #000000;
+      color: #ffffff;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .subtitle {
+      margin: 0 0 36px;
+      font-size: 0.85rem;
+      font-weight: 300;
+      line-height: 1.5;
+    }
+
+    label,
+    .result dt {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      display: block;
+      padding: 12px 14px;
+      margin: 0 auto 24px;
+      border: none;
+      border-radius: 8px;
+      background: #000000;
+      color: #ffffff;
+      color-scheme: dark;
+      font-size: 1rem;
+      font-family: inherit;
+      text-align: center;
+    }
+
+    input[type="number"] {
+      width: 96px;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    textarea {
+      resize: none;
+      min-height: 96px;
+      line-height: 1.5;
+    }
+
+    textarea::placeholder {
+      color: #ffffff;
+      font-style: italic;
+      font-weight: 300;
+    }
+
+    textarea,
+    input,
+    button {
+      transition: transform 0.15s ease;
+    }
+
+    /* Hover: transform only, so no lines, no background change and no layout shift */
+    textarea:hover,
+    input:hover {
+      transform: scale(1.03);
+    }
+
+    textarea:focus,
+    input:focus {
+      outline: none;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #000000;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:hover,
+    button:focus-visible {
+      outline: none;
+      transform: translateY(-2px);
+    }
+
+    button:active { transform: translateY(0); }
+
+    .error {
+      margin: 12px 0 0;
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+
+    .error:empty { display: none; }
+
+    .result {
+      display: none;
+      margin: 32px 0 0;
+    }
+
+    .result dd {
+      margin: 0 0 18px;
+      font-family: "Courier New", monospace;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+
+    .result dd:last-child { margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Caesar Cipher</h1>
+    <p class="subtitle">Shift every letter to make a secret message.</p>
+
+    <label for="message">Message</label>
+    <textarea id="message" placeholder="Type or paste your message here..."></textarea>
+
+    <label for="shift">Shift key (1–25)</label>
+    <input type="number" id="shift" min="1" max="25" value="3">
+
+    <div class="actions">
+      <button onclick="handleSubmit('encrypt')">Encrypt</button>
+      <button onclick="handleSubmit('decrypt')">Decrypt</button>
+    </div>
+
+    <p class="error" id="error"></p>
+
+    <dl class="result" id="result">
+      <dt id="inLabel"></dt>
+      <dd id="inText"></dd>
+      <dt id="outLabel"></dt>
+      <dd id="outText"></dd>
+    </dl>
+  </div>
+
+  <script>
+    // Same logic as the Python encrypt() function
+    function encrypt(text, shift) {
+      let ciphertext = "";
+
+      for (const char of text) {
+        if (char >= "A" && char <= "Z") {
+          const code = (char.charCodeAt(0) - "A".charCodeAt(0) + shift) % 26 + "A".charCodeAt(0);
+          ciphertext += String.fromCharCode(code);
+        } else if (char >= "a" && char <= "z") {
+          const code = (char.charCodeAt(0) - "a".charCodeAt(0) + shift) % 26 + "a".charCodeAt(0);
+          ciphertext += String.fromCharCode(code);
+        } else {
+          ciphertext += char;
+        }
+      }
+
+      return ciphertext;
+    }
+
+    // Undoes encrypt(): shifting back by `shift` is the same as shifting forward by 26 - shift
+    function decrypt(text, shift) {
+      return encrypt(text, 26 - shift);
+    }
+
+    // Runs when the Encrypt or Decrypt button is clicked
+    function handleSubmit(mode) {
+      const message = document.getElementById("message").value;
+      const shift = Number(document.getElementById("shift").value);
+      const error = document.getElementById("error");
+      const result = document.getElementById("result");
+
+      if (message.trim() === "") {
+        error.textContent = "Please type a message first.";
+        result.style.display = "none";
+        return;
+      }
+
+      if (!Number.isInteger(shift) || shift < 1 || shift > 25) {
+        error.textContent = "Please enter a whole number from 1 to 25.";
+        result.style.display = "none";
+        return;
+      }
+
+      error.textContent = "";
+      const decrypting = mode === "decrypt";
+      document.getElementById("inLabel").textContent = decrypting ? "Ciphertext" : "Plaintext";
+      document.getElementById("inText").textContent = message;
+      document.getElementById("outLabel").textContent = decrypting ? "Plaintext" : "Ciphertext";
+      document.getElementById("outText").textContent = decrypting ? decrypt(message, shift) : encrypt(message, shift);
+      result.style.display = "block";
+    }
+  </script>
+</body>
+</html>
